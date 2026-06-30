@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+uploads/
+outputs/
+*.log
+
+# Secrets / local config (never commit)
+.env
+.env.*
+*.pem
+*.key

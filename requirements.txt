@@ -1,0 +1,21 @@
+# PyTorch CPU wheels (Demucs depends on torch/torchaudio).
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchaudio
+
+# Web app
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Audio source separation
+demucs
+
+# Note transcription (audio -> MIDI) and its ONNX runtime backend
+basic-pitch
+onnxruntime
+
+# Audio I/O / MIDI helpers
+soundfile
+librosa
+pretty_midi

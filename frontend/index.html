@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tab &amp; Sheet Music Generator</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.2/build/cjs/vexflow.js"
+          onerror="window.__vexflowFailed=true"></script>
+  <script src="https://cdn.jsdelivr.net/npm/soundfont-player@0.12.0/dist/soundfont-player.min.js"
+          onerror="window.__sfFailed=true"></script>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🎸 Tab &amp; Sheet Music Generator</h1>
+      <p class="sub">Upload a song and get a guitar/bass tab or piano sheet music. Runs on your machine (sampled sound &amp; notation use the web when available).</p>
+    </header>
+
+    <section id="upload-card" class="card">
+      <div id="dropzone" class="dropzone">
+        <input id="file-input" type="file" accept="audio/*,.mp3,.wav,.flac,.m4a,.ogg" hidden />
+        <div class="dz-inner">
+          <div class="dz-icon">⬆</div>
+          <p><strong>Drop an audio file here</strong> or <span class="link">browse</span></p>
+          <p class="hint">mp3, wav, flac, m4a, ogg…</p>
+          <p id="filename" class="filename"></p>
+        </div>
+      </div>
+
+      <fieldset class="modes">
+        <legend>Instrument</legend>
+        <label><input type="radio" name="instrument" value="guitar" checked />
+          <span><strong>Guitar</strong> — 6-string standard tuning</span></label>
+        <label><input type="radio" name="instrument" value="bass" />
+          <span><strong>Bass</strong> — 4-string (transcribes more reliably)</span></label>
+        <label><input type="radio" name="instrument" value="piano" />
+          <span><strong>Piano</strong> — grand-staff sheet music + keyboard</span></label>
+      </fieldset>
+
+      <fieldset class="modes">
+        <legend>Instrument isolation</legend>
+        <label><input type="radio" name="mode" value="auto" checked />
+          <span><strong>Auto</strong> — separate the guitar from the full mix (recommended)</span></label>
+        <label><input type="radio" name="mode" value="separate" />
+          <span><strong>Isolate</strong> — always run source separation</span></label>
+        <label><input type="radio" name="mode" value="none" />
+          <span><strong>Use as-is</strong> — input is an isolated guitar stem / solo guitar (skip separation)</span></label>
+      </fieldset>
+
+      <fieldset class="modes" id="quality-modes">
+        <legend>Separation quality</legend>
+        <label><input type="radio" name="quality" value="fast" checked />
+          <span><strong>Fast</strong> — single pass (quicker)</span></label>
+        <label><input type="radio" name="quality" value="high" />
+          <span><strong>High quality</strong> — multi-pass + band-limiting, cleaner stem (slower)</span></label>
+        <p class="hint">Quality only applies when separating. Tip: if you already have an isolated guitar track, upload it and choose <em>Use as-is</em> for the cleanest tab.</p>
+      </fieldset>
+
+      <fieldset class="modes">
+        <legend>Tempo (optional)</legend>
+        <label class="bpm-field">BPM
+          <input id="upload-bpm" type="number" min="30" max="300" step="0.5" placeholder="Auto-detect" />
+        </label>
+        <p class="hint">Leave blank to detect from the upload. Set manually if playback or the grid feels too fast/slow (e.g. half/double-time detection).</p>
+      </fieldset>
+
+      <button id="generate" class="primary" disabled>Generate Tab</button>
+    </section>
+
+    <section id="progress-card" class="card hidden">
+      <div class="progress-row">
+        <div class="spinner"></div>
+        <span id="status-text">Working…</span>
+      </div>
+      <div class="bar"><div id="bar-fill" class="bar-fill"></div></div>
+      <details class="logs">
+        <summary>Details</summary>
+        <pre id="log-output"></pre>
+      </details>
+    </section>
+
+    <section id="result-card" class="card hidden">
+      <div class="result-head">
+        <h2><span id="result-title">Your Tab</span> <span id="tab-meta" class="tab-meta"></span></h2>
+        <div class="actions">
+          <button id="copy-btn">Copy</button>
+          <a id="download-tab" class="btn-link">Download .txt</a>
+          <a id="download-midi" class="btn-link">Download .mid</a>
+          <button id="restart-btn">New song</button>
+        </div>
+      </div>
+
+      <p id="run-path" class="hint run-path"></p>
+
+      <div id="player" class="player">
+        <button id="play-btn" class="play">▶ Play</button>
+        <button id="stop-btn" disabled>■ Stop</button>
+        <div class="play-bar"><div id="play-fill"></div></div>
+        <span id="play-time" class="play-time">0:00</span>
+        <label class="speed">Speed
+          <input id="speed" type="range" min="0.5" max="1.5" step="0.05" value="1" />
+          <span id="speed-val">1.0×</span>
+        </label>
+        <label class="bpm-ctrl">BPM
+          <input id="bpm-input" type="number" min="30" max="300" step="0.5" placeholder="auto" title="Adjust if playback feels faster or slower than your upload" />
+        </label>
+        <span id="bpm-hint" class="bpm-hint"></span>
+        <span id="sound-label" class="sound-label"></span>
+      </div>
+
+      <div id="sheet" class="sheet hidden"></div>
+      <div id="keyboard-wrap" class="keyboard-wrap hidden">
+        <div id="keyboard" class="keyboard"></div>
+      </div>
+      <div id="tab-output" class="tab"></div>
+    </section>
+
+    <section id="error-card" class="card hidden">
+      <h2>Something went wrong</h2>
+      <pre id="error-output" class="error"></pre>
+      <button id="error-restart" class="primary">Try again</button>
+    </section>
+
+    <footer>
+      <p>Pipeline: Demucs (separation) → basic-pitch (note transcription) → fretboard mapping.
+         Automated transcription is approximate — expect to clean it up by ear.</p>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
