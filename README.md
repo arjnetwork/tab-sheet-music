@@ -43,18 +43,30 @@ See **[TECHNICAL.md](TECHNICAL.md)** for architecture, algorithms, API details, 
 
 ## Quick start
 
-### Windows (PowerShell)
+### Windows
+
+**Easiest (no PowerShell script policy issues):**
+
+```cmd
+cd tab-sheet-music
+run.bat
+```
+
+Or double-click `run.bat` in File Explorer.
+
+**PowerShell** (`run.ps1` may be blocked by execution policy on some PCs):
 
 ```powershell
 git clone https://github.com/arjnetwork/tab-sheet-music.git
 cd tab-sheet-music
 
-# One-time setup (or let run.ps1 create the venv)
+# One-time setup (or let run.bat / run.ps1 create the venv)
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
-# Start the server
+# If .\run.ps1 fails with "running scripts is disabled", use run.bat instead, or:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 .\run.ps1
 ```
 
